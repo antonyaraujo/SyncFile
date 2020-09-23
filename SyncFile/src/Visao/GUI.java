@@ -1,21 +1,48 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package Visao;
+
+import java.io.File;
+import java.util.Random;
+import javax.swing.JFrame;
+import Controle.Sincronizador;
+import Modelo.Observer;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import javax.swing.JButton;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
 
 /**
  *
  * @author antony
  */
-public class GUI extends javax.swing.JFrame {
+public class GUI extends javax.swing.JFrame implements Observer {
 
-    /**
-     * Creates new form GUI
-     */
+    String conteudoArquivo;
+    File[] arquivos;
+    Sincronizador[] sincronizadores;
+
     public GUI() {
         initComponents();
+        
+        File[] arquivos = new File[3];
+        sincronizadores = new Sincronizador[5];
+        conteudoArquivo = "PISTOLEIRO 2.0";
+
+        for (int i = 0; i < 3; i++) {
+            arquivos[i] = new File("arquivo" + (i + 1) + ".txt");
+        }
+
+        for (int i = 0; i < 5; i++) {
+            sincronizadores[i] = new Sincronizador(arquivos, conteudoArquivo);
+            sincronizadores[i].registerObserver(this);
+        }       
+
+        for (int i = 0; i < 5; i++) {
+            sincronizadores[i].start();
+        }
+
+        
     }
 
     /**
@@ -28,59 +55,89 @@ public class GUI extends javax.swing.JFrame {
     private void initComponents() {
 
         painel_arquivo1 = new javax.swing.JPanel();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        texto_arquivo1 = new javax.swing.JTextArea();
         painel_arquivo2 = new javax.swing.JPanel();
+        jScrollPane2 = new javax.swing.JScrollPane();
+        texto_arquivo2 = new javax.swing.JTextArea();
         painel_arquivo3 = new javax.swing.JPanel();
+        jScrollPane3 = new javax.swing.JScrollPane();
+        texto_arquivo3 = new javax.swing.JTextArea();
         jMenuBar1 = new javax.swing.JMenuBar();
         menu_arquivo = new javax.swing.JMenu();
         menu_editar = new javax.swing.JMenu();
+        menuEntrada = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("SyncFile");
 
         painel_arquivo1.setBorder(javax.swing.BorderFactory.createTitledBorder("Arquivo 1: "));
 
+        texto_arquivo1.setColumns(20);
+        texto_arquivo1.setRows(5);
+        jScrollPane1.setViewportView(texto_arquivo1);
+
         javax.swing.GroupLayout painel_arquivo1Layout = new javax.swing.GroupLayout(painel_arquivo1);
         painel_arquivo1.setLayout(painel_arquivo1Layout);
         painel_arquivo1Layout.setHorizontalGroup(
             painel_arquivo1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 685, Short.MAX_VALUE)
+            .addComponent(jScrollPane1)
         );
         painel_arquivo1Layout.setVerticalGroup(
             painel_arquivo1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 100, Short.MAX_VALUE)
+            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 109, Short.MAX_VALUE)
         );
 
         painel_arquivo2.setBorder(javax.swing.BorderFactory.createTitledBorder("Arquivo 2: "));
         painel_arquivo2.setToolTipText("");
 
+        texto_arquivo2.setColumns(20);
+        texto_arquivo2.setRows(5);
+        jScrollPane2.setViewportView(texto_arquivo2);
+
         javax.swing.GroupLayout painel_arquivo2Layout = new javax.swing.GroupLayout(painel_arquivo2);
         painel_arquivo2.setLayout(painel_arquivo2Layout);
         painel_arquivo2Layout.setHorizontalGroup(
             painel_arquivo2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 685, Short.MAX_VALUE)
+            .addComponent(jScrollPane2)
         );
         painel_arquivo2Layout.setVerticalGroup(
             painel_arquivo2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 100, Short.MAX_VALUE)
+            .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 109, Short.MAX_VALUE)
         );
 
         painel_arquivo3.setBorder(javax.swing.BorderFactory.createTitledBorder("Arquivo 3: "));
+
+        texto_arquivo3.setColumns(20);
+        texto_arquivo3.setRows(5);
+        jScrollPane3.setViewportView(texto_arquivo3);
 
         javax.swing.GroupLayout painel_arquivo3Layout = new javax.swing.GroupLayout(painel_arquivo3);
         painel_arquivo3.setLayout(painel_arquivo3Layout);
         painel_arquivo3Layout.setHorizontalGroup(
             painel_arquivo3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 685, Short.MAX_VALUE)
+            .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 480, Short.MAX_VALUE)
         );
         painel_arquivo3Layout.setVerticalGroup(
             painel_arquivo3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 100, Short.MAX_VALUE)
+            .addGroup(painel_arquivo3Layout.createSequentialGroup()
+                .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(0, 4, Short.MAX_VALUE))
         );
 
         menu_arquivo.setText("Arquivo");
         jMenuBar1.add(menu_arquivo);
 
         menu_editar.setText("Editar");
+
+        menuEntrada.setText("Inserir Entrada");
+        menuEntrada.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                menuEntradaActionPerformed(evt);
+            }
+        });
+        menu_editar.add(menuEntrada);
+
         jMenuBar1.add(menu_editar);
 
         setJMenuBar(jMenuBar1);
@@ -91,11 +148,11 @@ public class GUI extends javax.swing.JFrame {
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addGap(29, 29, 29)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(painel_arquivo3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(painel_arquivo2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(painel_arquivo1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(29, 29, 29))
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(painel_arquivo3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(painel_arquivo2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(painel_arquivo1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap(31, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -106,15 +163,59 @@ public class GUI extends javax.swing.JFrame {
                 .addComponent(painel_arquivo2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(18, 18, 18)
                 .addComponent(painel_arquivo3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(31, Short.MAX_VALUE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         pack();
+        setLocationRelativeTo(null);
     }// </editor-fold>//GEN-END:initComponents
 
-    /**
-     * @param args the command line arguments
-     */
+    private void menuEntradaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuEntradaActionPerformed
+        
+        JFrame janela = new JFrame("::Modificar Arquivo::");
+        entradaArquivo painelEntrada = new entradaArquivo(conteudoArquivo, janela);
+        painelEntrada.registerObserver(this);
+        
+        janela.setSize(450, 380);
+        janela.setLocationRelativeTo(null);
+        janela.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+
+        painelEntrada.setPreferredSize(janela.getSize());
+        painelEntrada.setLocation(0, 0);
+
+        janela.setContentPane(painelEntrada);
+        janela.setVisible(true);
+        painelEntrada.setVisible(true);
+        
+    }//GEN-LAST:event_menuEntradaActionPerformed
+
+    @Override
+    public void update(Object objeto) {
+        Date d = new Date();
+        String dataModificacao = new SimpleDateFormat("HH:mm:ss dd/MM/yyyy").format(d);
+        conteudoArquivo = "Modificação feita em: " + dataModificacao + "\n" + (String) objeto;
+        for(int i = 0; i < 5; i++){
+                sincronizadores[i].setConteudoAtual(conteudoArquivo);                 
+        }
+        JOptionPane.showMessageDialog(this, conteudoArquivo);
+    }
+        
+    @Override
+    public void update(String conteudo, int numero){
+        conteudoArquivo = conteudo;
+        switch(numero){
+            case 1:                
+                texto_arquivo1.setText(conteudoArquivo);                
+                break;
+            case 2:
+                texto_arquivo2.setText(conteudoArquivo);
+                break;
+            case 3:                
+                texto_arquivo3.setText(conteudoArquivo);
+                break;
+        }
+    }
+    
     public static void main(String args[]) {
         /* Set the Nimbus look and feel */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
@@ -149,10 +250,18 @@ public class GUI extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JMenuBar jMenuBar1;
+    private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JScrollPane jScrollPane2;
+    private javax.swing.JScrollPane jScrollPane3;
+    private javax.swing.JMenuItem menuEntrada;
     private javax.swing.JMenu menu_arquivo;
     private javax.swing.JMenu menu_editar;
     private javax.swing.JPanel painel_arquivo1;
     private javax.swing.JPanel painel_arquivo2;
     private javax.swing.JPanel painel_arquivo3;
+    private javax.swing.JTextArea texto_arquivo1;
+    private javax.swing.JTextArea texto_arquivo2;
+    private javax.swing.JTextArea texto_arquivo3;
     // End of variables declaration//GEN-END:variables
+    
 }
