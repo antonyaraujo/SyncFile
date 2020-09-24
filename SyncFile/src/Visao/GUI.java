@@ -1,19 +1,18 @@
 package Visao;
 
 import java.io.File;
+import java.util.Random;
 import javax.swing.JFrame;
 import Controle.Sincronizador;
 import Modelo.Escritor;
 import Modelo.Leitor;
 import Modelo.Observer;
-import Modelo.Semaforo;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.concurrent.Semaphore;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import javax.swing.JButton;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
 
 /**
  *
@@ -24,51 +23,34 @@ public class GUI extends javax.swing.JFrame implements Observer {
     String conteudoArquivo;
     File[] arquivos;
     Sincronizador[] sincronizadores;
-    Leitor[] leitores;
-    Escritor[] escritores;
-    ArrayList fila;    
-    Semaphore mutex1, mutex2, mutex3;
-    Semaphore acessoArquivo1, acessoArquivo2, acessoArquivo3;
-    
-    public GUI() throws InterruptedException {
+
+    public GUI() {
         initComponents();
+        
         File[] arquivos = new File[3];
+        Leitor[] leitores = new Leitor[3];
+        Escritor[] escritores = new Escritor[3];
         sincronizadores = new Sincronizador[5];
-        leitores = new Leitor[3];
-        escritores = new Escritor[3];
-        Date d = new Date();
-        String dataModificacao = new SimpleDateFormat("HH:mm:ss dd/MM/yyyy").format(d);
-        conteudoArquivo = "Modificação feita em: " + dataModificacao + "\n" + "Configuração Inicial";        
-        //fila = new ArrayList();        
-        mutex1 = mutex2 = mutex3 = new Semaphore(1);
-        Semaphore mutex = new Semaphore(1);
-        acessoArquivo1 = acessoArquivo2 = acessoArquivo3 = new Semaphore(1);
+        conteudoArquivo = "PISTOLEIRO 2.0";
 
         for (int i = 0; i < 3; i++) {
             arquivos[i] = new File("arquivo" + (i + 1) + ".txt");
         }
+        
+        for(int i = 0; i < 3; i++){
+        
+        }
 
         for (int i = 0; i < 5; i++) {
-            sincronizadores[i] = new Sincronizador(conteudoArquivo, leitores, escritores);
+            sincronizadores[i] = new Sincronizador(arquivos, conteudoArquivo);
             sincronizadores[i].registerObserver(this);
-        }
-        
-        int qt1, qt2, qt3;
-        qt1 = qt2 = qt3 = 0;
-        
-        leitores[0] = new Leitor(conteudoArquivo, arquivos[0], mutex1, acessoArquivo1, qt1, 0);
-        escritores[0] = new Escritor(conteudoArquivo, arquivos[0], 0, acessoArquivo1);
-        
-        leitores[1] = new Leitor(conteudoArquivo, arquivos[1], mutex2, acessoArquivo2, qt2, 1);
-        escritores[1] = new Escritor(conteudoArquivo, arquivos[1], 1, acessoArquivo2);
+        }       
 
-        leitores[2] = new Leitor(conteudoArquivo, arquivos[2], mutex3, acessoArquivo3, qt3, 2);
-        escritores[2] = new Escritor(conteudoArquivo, arquivos[2], 2, acessoArquivo3);
-        
         for (int i = 0; i < 5; i++) {
             sincronizadores[i].start();
         }
 
+        
     }
 
     /**
@@ -197,11 +179,11 @@ public class GUI extends javax.swing.JFrame implements Observer {
     }// </editor-fold>//GEN-END:initComponents
 
     private void menuEntradaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuEntradaActionPerformed
-
+        
         JFrame janela = new JFrame("::Modificar Arquivo::");
         entradaArquivo painelEntrada = new entradaArquivo(conteudoArquivo, janela);
         painelEntrada.registerObserver(this);
-
+        
         janela.setSize(450, 380);
         janela.setLocationRelativeTo(null);
         janela.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
@@ -212,7 +194,7 @@ public class GUI extends javax.swing.JFrame implements Observer {
         janela.setContentPane(painelEntrada);
         janela.setVisible(true);
         painelEntrada.setVisible(true);
-
+        
     }//GEN-LAST:event_menuEntradaActionPerformed
 
     @Override
@@ -220,28 +202,28 @@ public class GUI extends javax.swing.JFrame implements Observer {
         Date d = new Date();
         String dataModificacao = new SimpleDateFormat("HH:mm:ss dd/MM/yyyy").format(d);
         conteudoArquivo = "Modificação feita em: " + dataModificacao + "\n" + (String) objeto;
-        for (int i = 0; i < 5; i++) {
-            sincronizadores[i].setConteudoAtual(conteudoArquivo);
+        for(int i = 0; i < 5; i++){
+                sincronizadores[i].setConteudoAtual(conteudoArquivo);                 
         }
         JOptionPane.showMessageDialog(this, conteudoArquivo);
     }
-
+        
     @Override
-    public void update(String conteudo, int numero) {
+    public void update(String conteudo, int numero){
         conteudoArquivo = conteudo;
-        switch (numero) {
-            case 1:
-                texto_arquivo1.setText(conteudoArquivo);
+        switch(numero){
+            case 1:                
+                texto_arquivo1.setText(conteudoArquivo);                
                 break;
             case 2:
                 texto_arquivo2.setText(conteudoArquivo);
                 break;
-            case 3:
+            case 3:                
                 texto_arquivo3.setText(conteudoArquivo);
                 break;
         }
     }
-
+    
     public static void main(String args[]) {
         /* Set the Nimbus look and feel */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
@@ -265,15 +247,12 @@ public class GUI extends javax.swing.JFrame implements Observer {
             java.util.logging.Logger.getLogger(GUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
         //</editor-fold>
+        //</editor-fold>
 
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                try {
-                    new GUI().setVisible(true);
-                } catch (InterruptedException ex) {
-                    Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
-                }
+                new GUI().setVisible(true);
             }
         });
     }
@@ -293,5 +272,5 @@ public class GUI extends javax.swing.JFrame implements Observer {
     private javax.swing.JTextArea texto_arquivo2;
     private javax.swing.JTextArea texto_arquivo3;
     // End of variables declaration//GEN-END:variables
-
+    
 }

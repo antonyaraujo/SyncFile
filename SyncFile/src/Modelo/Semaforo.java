@@ -42,7 +42,9 @@ public class Semaforo {
             }
         } else { // se ja existir um objeto executando
             if (atual instanceof Leitor) { // verifica-se se quem esta executando e um leitor
-                if (objeto instanceof Escritor) { // se o atual for um leitor e o objeto que entrou na fila tbm for um leitor, entao o que entrou tbm pode ser executado                                                            
+                if (objeto instanceof Leitor) { // se o atual for um leitor e o objeto que entrou na fila tbm for um leitor, entao o que entrou tbm pode ser executado
+                    ((Leitor) objeto).start();
+                } else { // se o atual for um leitor mas o que entrou for um escritor, o leitor precisa sair para dar prioridade ao escritor                        
                     sairDaFila(atual); // O leitor e interrompido                    
                     ((Escritor) objeto).sleep((int)Math.random() * 1000);
                 }
@@ -99,17 +101,12 @@ public class Semaforo {
         if (objeto == atual) {
             if (objeto instanceof Escritor) {
                 ((Escritor) objeto).interrupt();
-                ((Escritor) objeto).liberarPermissao();
-                if(filaGeral.size() > 0)
-                    atual = filaGeral.get(0);
-                
+                atual = filaGeral.get(0);
             } else {
                 ((Leitor) atual).interrupt();
-                ((Leitor) atual).liberarPermissao();
                 for (int i = 0; i < filaGeral.size(); i++) {
                     if (filaGeral.get(i) instanceof Leitor) {
                         ((Leitor) filaGeral.get(i)).interrupt();
-                        ((Leitor) filaGeral.get(i)).liberarPermissao();
                         filaGeral.remove(filaGeral.get(i));
                     } else{
                         atual = filaGeral.get(i);
@@ -121,13 +118,10 @@ public class Semaforo {
             if (atual instanceof Escritor) 
                 ((Escritor) atual).start();                                              
         } else {            
-            if(objeto instanceof Leitor){
+            if(objeto instanceof Leitor)
                 ((Leitor) objeto).interrupt();    
-                ((Leitor) objeto).liberarPermissao();
-            }else{
+            else
                 ((Escritor)objeto).interrupt();
-                ((Escritor)objeto).liberarPermissao();
-            }
           
         }
 
