@@ -1,2 +1,2 @@
-Modificação feita em: 17:43:27 22/09/2020
-funciona desgrama
+Modificação feita em: 15:14:01 24/09/2020
+Configuração Inicial

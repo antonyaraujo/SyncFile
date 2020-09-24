@@ -10,26 +10,26 @@ import Modelo.Escritor;
 import Modelo.Observable;
 import Modelo.Observer;
 import java.util.Random;
-
+import java.util.concurrent.Semaphore;
 
 public class Sincronizador extends Thread implements Observable {
 
     private ArrayList<Observer> observers = new ArrayList();
-    File[] arquivos;
     String conteudoAtual, conteudoTemporario;
-    ArrayList fila;
     boolean modificacao;
-    Semaforo s;
     int valorTemporario;
+    Leitor[] leitores;
+    Escritor[] escritores;
+    Semaforo semaforo;
 
-    public Sincronizador(File[] arquivos, String conteudoAtual) {
-        this.arquivos = arquivos;
+    public Sincronizador(String conteudoAtual, Leitor[] leitores, Escritor[] escritores) {
         this.conteudoAtual = conteudoAtual;
-        fila = new ArrayList();
-        s = new Semaforo(fila);
-        modificacao = false;
+        modificacao = true;
         conteudoTemporario = "";
         valorTemporario = 0;
+        this.leitores = leitores;
+        this.escritores = escritores;
+        this.semaforo = semaforo;
     }
 
     public String getConteudoAtual() {
@@ -45,81 +45,93 @@ public class Sincronizador extends Thread implements Observable {
     public void run() {
         while (true) {
             if (modificacao) {
-                Escritor e = new Escritor(conteudoAtual, fila, arquivos[new Random().nextInt(3)]);
+                int numero = 0;
+                while (true) {
+                    numero = new Random().nextInt(3);
+                    if (!escritores[numero].getEstado()) {
+                        escritores[numero].adquirirPermissao();
+                        System.out.println("Só uma chegou aqui com " + numero);
+                        break;
+                        
+                    } 
+                }
+                escritores[numero].setConteudo(conteudoAtual);
+                escritores[numero].start();                   
                 try {
-                    s.entrarNaFila(e);
+                    escritores[numero].join();
                 } catch (InterruptedException ex) {
                     Logger.getLogger(Sincronizador.class.getName()).log(Level.SEVERE, null, ex);
                 }
+                escritores[numero].liberarPermissao();
                 modificacao = false;
             } else {
-                Leitor leitor1 = new Leitor(arquivos, fila);
-                Leitor leitor2 = new Leitor(arquivos, fila);
-
+                int numero1 = 0;
+                int numero2 = 0;
                 while (true) {
-                    if (leitor2.getNumArquivo() != leitor1.getNumArquivo()) {
+                    numero1 = new Random().nextInt(3);
+                    if (!leitores[numero1].getEstado()) {
+                        leitores[numero1].adquirirPermissao();
+                    }
+                    numero2 = new Random().nextInt(3);
+                    if (!leitores[numero2].getEstado()) {
+                        leitores[numero2].adquirirPermissao();
+                    }
+                    
+                    if (leitores[numero1].getEstado() && !(leitores[numero2].getEstado())) {
+                        leitores[numero1].liberarPermissao();
+                    }
+                    if (!(leitores[numero1].getEstado()) && (leitores[numero2].getEstado())) {
+                        leitores[numero2].liberarPermissao();
+                    }
+                    if (leitores[numero1].getEstado() && leitores[numero2].getEstado()) {
                         break;
-                    } else {
-                        leitor2 = new Leitor(arquivos, fila);
                     }
                 }
 
-                try {
-                    s.entrarNaFila(leitor1);
-                    s.entrarNaFila(leitor2);
-                } catch (InterruptedException ex) {
-                    Logger.getLogger(Sincronizador.class.getName()).log(Level.SEVERE, null, ex);
-                }
                 
-                
+                    leitores[numero1].start();
+                    leitores[numero1].liberarPermissao();                    
+                    leitores[numero2].start();                    
+                    leitores[numero2].liberarPermissao();                                    
+                                                
 
-                if ((conteudoAtual.equals(leitor1.getConteudo())) && !(conteudoAtual.equals(leitor2.getConteudo()))) {
-                    Escritor e = new Escritor(leitor1.getConteudo(), fila, leitor2.getArquivo());
-                    try {
-                        s.entrarNaFila(e);
-                        System.out.println("Entrei na diferença");
-                    } catch (InterruptedException ex) {
-                        Logger.getLogger(Sincronizador.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                }
-
-                if (!(conteudoAtual.equals(leitor1.getConteudo())) && conteudoAtual.equals(leitor2.getConteudo())) {
-                    Escritor e = new Escritor(leitor2.getConteudo(), fila, leitor1.getArquivo());
-                    try {
-                        s.entrarNaFila(e);                       
-                        System.out.println("Entrei na diferença");
-                    } catch (InterruptedException ex) {
-                        Logger.getLogger(Sincronizador.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                }
-
-                if (!(leitor1.getConteudo().equals(""))) {
-                    conteudoTemporario = leitor1.getConteudo();
-                    valorTemporario = leitor1.getNumArquivo() + 1;
+                if (conteudoAtual.equals(leitores[numero1].getConteudo()) && !(conteudoAtual.equals(leitores[numero2].getConteudo()))) {
+                    conteudoTemporario = leitores[numero1].getConteudo();
+                    valorTemporario = numero1;
                     notifyObservers();
+                    while (true) {
+                        if (!escritores[numero2].getEstado()) {
+                            escritores[numero2].adquirirPermissao();
+                            escritores[numero2].setConteudo(leitores[numero1].getConteudo());
+                            escritores[numero2].start();
+                            escritores[numero2].liberarPermissao();
+                            conteudoTemporario = leitores[numero2].getConteudo();
+                            valorTemporario = numero2;
+                            notifyObservers();
+                            break;
+                        }
+                    }
                 }
 
-                if (!(leitor2.getConteudo().equals(""))) {
-                    conteudoTemporario = leitor2.getConteudo();
-                    valorTemporario = leitor2.getNumArquivo() + 1;
+                if (!(conteudoAtual.equals(leitores[numero1].getConteudo())) && (conteudoAtual.equals(leitores[numero2].getConteudo()))) {
+                    conteudoTemporario = leitores[numero2].getConteudo();
+                    valorTemporario = numero2;
                     notifyObservers();
-                }                                
-                 
-                if(leitor1.isAlive()){
-                    leitor1.interrupt();                    
+                    while (true) {
+                        if (!escritores[numero1].getEstado()) {
+                            escritores[numero1].adquirirPermissao();
+                            escritores[numero1].setConteudo(leitores[numero2].getConteudo());
+                            escritores[numero1].start();
+                            escritores[numero1].liberarPermissao();
+                            conteudoTemporario = leitores[numero1].getConteudo();
+                            valorTemporario = numero1;
+                            notifyObservers();
+                            break;
+                        }
+                    }
                 }
-                if(leitor2.isAlive())
-                    leitor2.interrupt();
-                
-                if(leitor1.getConteudo().equals(leitor2.getConteudo()))
-                    try {
-                        sleep((int)Math.random()*1000);
-                } catch (InterruptedException ex) {
-                    Logger.getLogger(Sincronizador.class.getName()).log(Level.SEVERE, null, ex);
-                }
-                
+
             }
-
         }
     }
 
