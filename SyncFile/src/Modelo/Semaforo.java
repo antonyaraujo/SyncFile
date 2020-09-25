@@ -7,6 +7,10 @@ package Modelo;
 
 import java.util.ArrayList;
 import java.lang.Thread;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 /**
  *
@@ -46,13 +50,13 @@ public class Semaforo {
                     ((Leitor) objeto).start();
                 } else { // se o atual for um leitor mas o que entrou for um escritor, o leitor precisa sair para dar prioridade ao escritor                        
                     sairDaFila(atual); // O leitor e interrompido                    
-                    ((Escritor) objeto).sleep((int)Math.random() * 1000);
+                    ((Escritor) objeto).sleep((int)Math.random() * 1);
                 }
             } else {
                 if (objeto instanceof Leitor) {
-                    ((Leitor) objeto).sleep((int)Math.random() * 1000);  // Se o atual for um escritor e o inserido um leitor, entao esse deve esperar e tentar novamente
+                    ((Leitor) objeto).sleep((int)Math.random() * 1);  // Se o atual for um escritor e o inserido um leitor, entao esse deve esperar e tentar novamente
                 } else {
-                    ((Escritor) objeto).sleep(1000);  // Se o atual for um escritor e o inserido um escritor, este deve esperar ate que o escritor atual termine sua escrita                
+                    ((Escritor) objeto).sleep(1);  // Se o atual for um escritor e o inserido um escritor, este deve esperar ate que o escritor atual termine sua escrita                
                 }
             }
 
@@ -102,6 +106,8 @@ public class Semaforo {
             if (objeto instanceof Escritor) {
                 ((Escritor) objeto).interrupt();
                 atual = filaGeral.get(0);
+                if(atual instanceof Leitor)
+                    ((Leitor)atual).start();
             } else {
                 ((Leitor) atual).interrupt();
                 for (int i = 0; i < filaGeral.size(); i++) {
@@ -114,17 +120,18 @@ public class Semaforo {
                     }
                 }
             }
-            
+
             if (atual instanceof Escritor) 
-                ((Escritor) atual).start();                                              
+                ((Escritor) atual).start();            
         } else {            
             if(objeto instanceof Leitor)
                 ((Leitor) objeto).interrupt();    
             else
                 ((Escritor)objeto).interrupt();
-          
+
         }
 
     }
 
 }
+

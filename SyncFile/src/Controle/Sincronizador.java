@@ -9,8 +9,11 @@ import Modelo.Leitor;
 import Modelo.Escritor;
 import Modelo.Observable;
 import Modelo.Observer;
+import java.util.List;
 import java.util.Random;
-
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 public class Sincronizador extends Thread implements Observable {
 
@@ -37,7 +40,10 @@ public class Sincronizador extends Thread implements Observable {
     }
 
     public void setConteudoAtual(String novoConteudo) {
-        conteudoAtual = novoConteudo;
+        conteudoAtual = novoConteudo;        
+    }
+    
+    public void setModificado(){
         modificacao = true;
     }
 
@@ -70,8 +76,8 @@ public class Sincronizador extends Thread implements Observable {
                 } catch (InterruptedException ex) {
                     Logger.getLogger(Sincronizador.class.getName()).log(Level.SEVERE, null, ex);
                 }
-                
-                
+
+
 
                 if ((conteudoAtual.equals(leitor1.getConteudo())) && !(conteudoAtual.equals(leitor2.getConteudo()))) {
                     Escritor e = new Escritor(leitor1.getConteudo(), fila, leitor2.getArquivo());
@@ -104,20 +110,15 @@ public class Sincronizador extends Thread implements Observable {
                     valorTemporario = leitor2.getNumArquivo() + 1;
                     notifyObservers();
                 }                                
-                 
-                if(leitor1.isAlive()){
-                    leitor1.interrupt();                    
-                }
-                if(leitor2.isAlive())
-                    leitor2.interrupt();
-                
+             
+
                 if(leitor1.getConteudo().equals(leitor2.getConteudo()))
                     try {
                         sleep((int)Math.random()*1000);
                 } catch (InterruptedException ex) {
                     Logger.getLogger(Sincronizador.class.getName()).log(Level.SEVERE, null, ex);
                 }
-                
+
             }
 
         }
@@ -139,5 +140,4 @@ public class Sincronizador extends Thread implements Observable {
             ob.update(conteudoTemporario, valorTemporario);
         }
     }
-
 }

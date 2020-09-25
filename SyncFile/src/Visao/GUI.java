@@ -8,11 +8,12 @@ import Modelo.Escritor;
 import Modelo.Leitor;
 import Modelo.Observer;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
-import javax.swing.JButton;
+import java.util.List;
+import java.util.concurrent.Semaphore;
 import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JTextField;
+
 
 /**
  *
@@ -23,22 +24,20 @@ public class GUI extends javax.swing.JFrame implements Observer {
     String conteudoArquivo;
     File[] arquivos;
     Sincronizador[] sincronizadores;
+    Leitor[] leitores;
+    Escritor[] escritores;
+    ArrayList fila;    
+    Semaphore mutex1, mutex2, mutex3;
+    Semaphore acessoArquivo1, acessoArquivo2, acessoArquivo3;
 
-    public GUI() {
+    public GUI(){
         initComponents();
-        
         File[] arquivos = new File[3];
-        Leitor[] leitores = new Leitor[3];
-        Escritor[] escritores = new Escritor[3];
         sincronizadores = new Sincronizador[5];
         conteudoArquivo = "PISTOLEIRO 2.0";
 
         for (int i = 0; i < 3; i++) {
             arquivos[i] = new File("arquivo" + (i + 1) + ".txt");
-        }
-        
-        for(int i = 0; i < 3; i++){
-        
         }
 
         for (int i = 0; i < 5; i++) {
@@ -46,10 +45,10 @@ public class GUI extends javax.swing.JFrame implements Observer {
             sincronizadores[i].registerObserver(this);
         }       
 
+        sincronizadores[new Random().nextInt(5)].setModificado();
         for (int i = 0; i < 5; i++) {
             sincronizadores[i].start();
         }
-
         
     }
 
@@ -205,6 +204,7 @@ public class GUI extends javax.swing.JFrame implements Observer {
         for(int i = 0; i < 5; i++){
                 sincronizadores[i].setConteudoAtual(conteudoArquivo);                 
         }
+        sincronizadores[new Random().nextInt(5)].setModificado();
         JOptionPane.showMessageDialog(this, conteudoArquivo);
     }
         
