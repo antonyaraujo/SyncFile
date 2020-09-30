@@ -79,6 +79,7 @@ public class GUI extends javax.swing.JFrame implements Observer {
 
         texto_arquivo1.setColumns(20);
         texto_arquivo1.setRows(5);
+        texto_arquivo1.setEnabled(false);
         jScrollPane1.setViewportView(texto_arquivo1);
 
         javax.swing.GroupLayout painel_arquivo1Layout = new javax.swing.GroupLayout(painel_arquivo1);
@@ -97,6 +98,7 @@ public class GUI extends javax.swing.JFrame implements Observer {
 
         texto_arquivo2.setColumns(20);
         texto_arquivo2.setRows(5);
+        texto_arquivo2.setEnabled(false);
         jScrollPane2.setViewportView(texto_arquivo2);
 
         javax.swing.GroupLayout painel_arquivo2Layout = new javax.swing.GroupLayout(painel_arquivo2);
@@ -114,6 +116,7 @@ public class GUI extends javax.swing.JFrame implements Observer {
 
         texto_arquivo3.setColumns(20);
         texto_arquivo3.setRows(5);
+        texto_arquivo3.setEnabled(false);
         jScrollPane3.setViewportView(texto_arquivo3);
 
         javax.swing.GroupLayout painel_arquivo3Layout = new javax.swing.GroupLayout(painel_arquivo3);

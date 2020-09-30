@@ -1,3 +1,2 @@
-Bem-Vindo ao SyncFile v2
-Para Modificar o Arquivo vá em: 
-Editar >> Inserir Entrada
+Modificação feita em: 16:10:33 30/09/2020
+modificado
