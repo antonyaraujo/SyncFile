@@ -1,143 +1,181 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
 package Controle;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import Modelo.Semaforo;
-import Modelo.Leitor;
-import Modelo.Escritor;
+import Modelo.Arquivo;
 import Modelo.Observable;
 import Modelo.Observer;
-import java.util.List;
+import Modelo.Permissoes;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Random;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-public class Sincronizador extends Thread implements Observable {
-
-    private ArrayList<Observer> observers = new ArrayList();
-    File[] arquivos;
-    String conteudoAtual, conteudoTemporario;
-    ArrayList fila;
-    boolean modificacao;
-    Semaforo s;
-    int valorTemporario;
-
-    public Sincronizador(File[] arquivos, String conteudoAtual) {
+/**
+ *
+ * @author antony
+ */
+    public class Sincronizador extends Thread implements Observable{
+    Arquivo[] arquivos;
+    boolean modificado;
+    String conteudoAtual;
+    Permissoes permissoes;
+    ArrayList<Observer> observers;
+    String conteudoTemporario;
+    int valor;
+    
+    public Sincronizador(Arquivo[] arquivos){
         this.arquivos = arquivos;
-        this.conteudoAtual = conteudoAtual;
-        fila = new ArrayList();
-        s = new Semaforo(fila);
-        modificacao = false;
+        modificado = false;
+        conteudoAtual = "";
+        permissoes = new Permissoes();
+        observers = new ArrayList();
         conteudoTemporario = "";
-        valorTemporario = 0;
-    }
-
-    public String getConteudoAtual() {
-        return conteudoAtual;
-    }
-
-    public void setConteudoAtual(String novoConteudo) {
-        conteudoAtual = novoConteudo;        
+        valor = 0;
     }
     
+    /**
+     * Altera o valor da variavel conteudo do tipo String
+     * @param conteudo  // armazena o conteudo mais atualizado dos arquivos
+     */
+    public void setConteudoAtual(String conteudo){
+        this.conteudoAtual = conteudo;
+    }
+    
+    /**
+     * Muda o valor da variavel modificado para true
+     * Indica que um arquivo aleatorio deve ser modificado
+     */
     public void setModificado(){
-        modificacao = true;
+        this.modificado = true; 
     }
-
+            
     @Override
-    public void run() {
-        while (true) {
-            if (modificacao) {
-                Escritor e = new Escritor(conteudoAtual, fila, arquivos[new Random().nextInt(3)]);
+    public void run(){
+        while(true){
+            if(modificado){ // se existir modificacao a ser feita
+                int numero = new Random().nextInt(3);
+                Escritor escritor = new Escritor(arquivos[numero], conteudoAtual, permissoes);
+                escritor.start();                                
                 try {
-                    s.entrarNaFila(e);
+                    escritor.join();
                 } catch (InterruptedException ex) {
                     Logger.getLogger(Sincronizador.class.getName()).log(Level.SEVERE, null, ex);
+                }                
+                escritor.atualizarArquivo();
+                for(int i = 0; i < 3; i++){
+                    if(i != numero)
+                        arquivos[i].desatualizar();
                 }
-                modificacao = false;
-            } else {
-                Leitor leitor1 = new Leitor(arquivos, fila);
-                Leitor leitor2 = new Leitor(arquivos, fila);
-
-                while (true) {
-                    if (leitor2.getNumArquivo() != leitor1.getNumArquivo()) {
+                modificado = false;
+            } else { // se nao existir modificacao, deve-se fazer somente sincronizacao
+                int n1 = new Random().nextInt(3);
+                int n2 = new Random().nextInt(3);
+                while(true){
+                    if(n1 != n2)
                         break;
-                    } else {
-                        leitor2 = new Leitor(arquivos, fila);
+                    else{
+                        n1 = new Random().nextInt(3);
+                        n2 = new Random().nextInt(3);
                     }
                 }
-
+                
+                Leitor leitor1 = new Leitor(arquivos[n1], permissoes);
+                Leitor leitor2 = new Leitor(arquivos[n2], permissoes);
+                leitor1.start();
                 try {
-                    s.entrarNaFila(leitor1);
-                    s.entrarNaFila(leitor2);
+                    leitor1.join();
                 } catch (InterruptedException ex) {
                     Logger.getLogger(Sincronizador.class.getName()).log(Level.SEVERE, null, ex);
                 }
-
-
-
-                if ((conteudoAtual.equals(leitor1.getConteudo())) && !(conteudoAtual.equals(leitor2.getConteudo()))) {
-                    Escritor e = new Escritor(leitor1.getConteudo(), fila, leitor2.getArquivo());
-                    try {
-                        s.entrarNaFila(e);
-                        System.out.println("Entrei na diferença");
-                    } catch (InterruptedException ex) {
-                        Logger.getLogger(Sincronizador.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                }
-
-                if (!(conteudoAtual.equals(leitor1.getConteudo())) && conteudoAtual.equals(leitor2.getConteudo())) {
-                    Escritor e = new Escritor(leitor2.getConteudo(), fila, leitor1.getArquivo());
-                    try {
-                        s.entrarNaFila(e);                       
-                        System.out.println("Entrei na diferença");
-                    } catch (InterruptedException ex) {
-                        Logger.getLogger(Sincronizador.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                }
-
-                if (!(leitor1.getConteudo().equals(""))) {
-                    conteudoTemporario = leitor1.getConteudo();
-                    valorTemporario = leitor1.getNumArquivo() + 1;
-                    notifyObservers();
-                }
-
-                if (!(leitor2.getConteudo().equals(""))) {
-                    conteudoTemporario = leitor2.getConteudo();
-                    valorTemporario = leitor2.getNumArquivo() + 1;
-                    notifyObservers();
-                }                                
-             
-
-                if(leitor1.getConteudo().equals(leitor2.getConteudo()))
-                    try {
-                        sleep((int)Math.random()*1000);
+                leitor2.start();
+                try {
+                    leitor2.join();
                 } catch (InterruptedException ex) {
                     Logger.getLogger(Sincronizador.class.getName()).log(Level.SEVERE, null, ex);
                 }
-
+                
+                /**
+                 * se o arquivo 1 estiver atualizado e o segundo nao
+                 * atualiza-se o arquivo 2 com o conteudo do arquivo 1
+                 */
+                if(leitor1.isAtualizado() && !leitor2.isAtualizado()){ 
+                    
+                    Escritor escritor = new Escritor(arquivos[n2], leitor1.getConteudo(), permissoes);
+                    escritor.start();                    
+                    try {
+                        escritor.join();
+                    } catch (InterruptedException ex) {
+                        Logger.getLogger(Sincronizador.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                    escritor.atualizarArquivo();
+                }
+                
+                /**
+                 * se o arquivo 2 estiver atualizado e o segundo nao
+                 * atualiza-se o arquivo 1 com o conteudo do arquivo 2
+                 */
+                if(!leitor1.isAtualizado() && leitor2.isAtualizado()){
+                    Escritor escritor = new Escritor(arquivos[n1], leitor2.getConteudo(), permissoes);
+                    escritor.start();
+                    try {
+                        escritor.join();
+                    } catch (InterruptedException ex) {
+                        Logger.getLogger(Sincronizador.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                    escritor.atualizarArquivo();
+                }
+                
+                conteudoTemporario = leitor1.getConteudo();
+                valor = n1+1;
+                notifyObservers(); // notifica-se a interface que um dos arquivos foi atualizado
+                conteudoTemporario = leitor2.getConteudo();
+                valor = n2+1;
+                notifyObservers(); // notifica-se a interface que um dos arquivos foi atualizado
+                                
+            
             }
-
-        }
+            if(!modificado){
+                try {
+                    sleep(new Random().nextInt(10)*1000);
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(Sincronizador.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        }        
     }
-
+    
+    /**
+     * Adiciona um objeto para observar modificacoes feitas no Sincronizador
+     * @param observer 
+     */
     @Override
     public void registerObserver(Observer observer) {
         observers.add(observer);
     }
 
+    /**
+     * Remove um objeto que ja observa o Sincronizador
+     * @param observer 
+     */
     @Override
     public void removeObserver(Observer observer) {
         observers.remove(observer);
     }
 
+    /**
+     * Notifica os observadores do sincronizador de modificacoes que ocorreram
+     */
     @Override
     public void notifyObservers() {
         for (Observer ob : observers) {
-            ob.update(conteudoTemporario, valorTemporario);
+            ob.update(conteudoTemporario, valor);
         }
-    }
+   }    
+    
 }

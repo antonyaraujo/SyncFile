@@ -4,14 +4,13 @@ import java.io.File;
 import java.util.Random;
 import javax.swing.JFrame;
 import Controle.Sincronizador;
-import Modelo.Escritor;
-import Modelo.Leitor;
+import Modelo.Arquivo;
 import Modelo.Observer;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
-import java.util.concurrent.Semaphore;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 
 
@@ -19,36 +18,34 @@ import javax.swing.JOptionPane;
  *
  * @author antony
  */
-public class GUI extends javax.swing.JFrame implements Observer {
+public class GUI extends javax.swing.JFrame implements Observer {       
 
-    String conteudoArquivo;
-    File[] arquivos;
-    Sincronizador[] sincronizadores;
-    Leitor[] leitores;
-    Escritor[] escritores;
-    ArrayList fila;    
-    Semaphore mutex1, mutex2, mutex3;
-    Semaphore acessoArquivo1, acessoArquivo2, acessoArquivo3;
-
-    public GUI(){
+    Sincronizador[] sincronizadores; // Vetor de objetos do tipo Sincronizador
+    String conteudoArquivo; // Armazena o conteudo mais atual dos arquivos
+    
+    public GUI() throws IOException, InterruptedException{
         initComponents();
-        File[] arquivos = new File[3];
+        conteudoArquivo = "";
+        Arquivo[] arquivos = new Arquivo[3];
         sincronizadores = new Sincronizador[5];
-        conteudoArquivo = "PISTOLEIRO 2.0";
-
-        for (int i = 0; i < 3; i++) {
-            arquivos[i] = new File("arquivo" + (i + 1) + ".txt");
-        }
-
-        for (int i = 0; i < 5; i++) {
-            sincronizadores[i] = new Sincronizador(arquivos, conteudoArquivo);
+        
+        for(int i = 0; i < 3; i++){
+            arquivos[i] = new Arquivo(new File(("arquivo" + (i+1) + ".txt")));
+        }                
+        
+        for(int i = 0; i < 5; i++){
+            sincronizadores[i] = new Sincronizador(arquivos);
             sincronizadores[i].registerObserver(this);
-        }       
-
-        sincronizadores[new Random().nextInt(5)].setModificado();
-        for (int i = 0; i < 5; i++) {
             sincronizadores[i].start();
+            sincronizadores[i].setConteudoAtual("Bem-Vindo ao SyncFile v2\nPara Modificar o Arquivo vá em: \nEditar >> Inserir Entrada");
+            //sincronizadores[i].join();
         }
+        
+        int num = new Random().nextInt(5);        
+        sincronizadores[num].setModificado();
+                
+        for(int i = 0; i < 3; i++)
+            System.out.println("Arquivo " + (i+1) + ": " + arquivos[i].getConteudo());   
         
     }
 
@@ -196,18 +193,30 @@ public class GUI extends javax.swing.JFrame implements Observer {
         
     }//GEN-LAST:event_menuEntradaActionPerformed
 
+    /**
+     * Recebe o novo valor (String) para modificar um dos arquivos aleatoriamente
+     * @param objeto (String)
+     */
     @Override
     public void update(Object objeto) {
         Date d = new Date();
         String dataModificacao = new SimpleDateFormat("HH:mm:ss dd/MM/yyyy").format(d);
         conteudoArquivo = "Modificação feita em: " + dataModificacao + "\n" + (String) objeto;
         for(int i = 0; i < 5; i++){
-                sincronizadores[i].setConteudoAtual(conteudoArquivo);                 
+          sincronizadores[i].setConteudoAtual(conteudoArquivo);
         }
-        sincronizadores[new Random().nextInt(5)].setModificado();
+        int num = new Random().nextInt(5);        
+        sincronizadores[num].setModificado();
+        num = new Random().nextInt(5);        
+        sincronizadores[num].setModificado();
         JOptionPane.showMessageDialog(this, conteudoArquivo);
     }
         
+    /**
+     * Recebe o valor lido de algum dos tres arquivos para exibicao na interface
+     * @param conteudo
+     * @param numero 
+     */
     @Override
     public void update(String conteudo, int numero){
         conteudoArquivo = conteudo;
@@ -248,11 +257,23 @@ public class GUI extends javax.swing.JFrame implements Observer {
         }
         //</editor-fold>
         //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
 
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new GUI().setVisible(true);
+                try {
+                    new GUI().setVisible(true);
+                } catch (IOException ex) {
+                    Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
+                }
             }
         });
     }

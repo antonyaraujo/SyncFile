@@ -1,1 +1,3 @@
-PISTOLEIRO 2.0
+Bem-Vindo ao SyncFile v2
+Para Modificar o Arquivo vá em: 
+Editar >> Inserir Entrada
